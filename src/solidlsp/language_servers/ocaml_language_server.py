@@ -191,6 +191,5 @@ class OcamlLanguageServer(SolidLanguageServer):
         self.server.notify.initialized({})
         self.completions_available.set()
 
-        # OCaml Language Server is typically ready after initialization
+        # OCaml Language Server is ready after initialization
         self.server_ready.set()
-        self.server_ready.wait()
