@@ -1,0 +1,11 @@
+(executable
+ (name main)
+ (public_name test_repo))
+
+(library
+ (name calculator)
+ (modules calculator))
+
+(library
+ (name helper)
+ (modules helper))
