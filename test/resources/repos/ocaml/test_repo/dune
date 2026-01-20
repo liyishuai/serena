@@ -1,6 +1,7 @@
 (executable
  (name main)
- (public_name test_repo))
+ (modules main)
+ (libraries calculator helper))
 
 (library
  (name calculator)

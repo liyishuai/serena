@@ -7,9 +7,11 @@ import os
 import pathlib
 import shutil
 import threading
+from collections import defaultdict
 
 from overrides import override
 
+from solidlsp import ls_types
 from solidlsp.ls import SolidLanguageServer
 from solidlsp.ls_config import LanguageServerConfig
 from solidlsp.lsp_protocol_handler.lsp_types import InitializeParams
@@ -73,6 +75,7 @@ class OcamlLanguageServer(SolidLanguageServer):
         )
         self.server_ready = threading.Event()
         self.request_id = 0
+        self.diagnostics: dict[str, list[ls_types.Diagnostic]] = defaultdict(list)
 
     @staticmethod
     def _get_initialize_params(repository_absolute_path: str) -> InitializeParams:
@@ -169,10 +172,25 @@ class OcamlLanguageServer(SolidLanguageServer):
         def do_nothing(params: dict) -> None:
             return
 
+        def publish_diagnostics(params: dict) -> None:
+            uri = params["uri"]
+            diagnostics = params["diagnostics"]
+            self.diagnostics[uri] = [
+                ls_types.Diagnostic(
+                    uri=uri,
+                    range=d["range"],
+                    severity=d.get("severity"),
+                    message=d["message"],
+                    code=d.get("code"),  # type: ignore
+                    source=d.get("source"),
+                )
+                for d in diagnostics
+            ]
+
         self.server.on_request("client/registerCapability", register_capability_handler)
         self.server.on_notification("window/logMessage", window_log_message)
         self.server.on_notification("$/progress", do_nothing)
-        self.server.on_notification("textDocument/publishDiagnostics", do_nothing)
+        self.server.on_notification("textDocument/publishDiagnostics", publish_diagnostics)
 
         log.info("Starting OCaml Language Server process")
         self.server.start()
@@ -193,3 +211,9 @@ class OcamlLanguageServer(SolidLanguageServer):
 
         # OCaml Language Server is ready after initialization
         self.server_ready.set()
+
+    @override
+    def request_text_document_diagnostics(self, relative_file_path: str) -> list[ls_types.Diagnostic]:
+        absolute_file_path = str(pathlib.PurePath(self.repository_root_path, relative_file_path))
+        uri = pathlib.Path(absolute_file_path).as_uri()
+        return self.diagnostics.get(uri, [])
