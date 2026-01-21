@@ -1,0 +1,12 @@
+(executable
+ (name main)
+ (modules main)
+ (libraries calculator helper))
+
+(library
+ (name calculator)
+ (modules calculator))
+
+(library
+ (name helper)
+ (modules helper))

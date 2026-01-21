@@ -100,6 +100,10 @@ class Language(str, Enum):
     """TOML language server using Taplo.
     Supports TOML validation, formatting, and schema support.
     """
+    OCAML = "ocaml"
+    """OCaml language server using ocaml-lsp-server.
+    Requires ocamllsp to be installed (usually via opam).
+    """
 
     @classmethod
     def iter_all(cls, include_experimental: bool = False) -> Iterable[Self]:
@@ -239,6 +243,8 @@ class Language(str, Enum):
                 return FilenameMatcher("*.groovy", "*.gvy")
             case self.MATLAB:
                 return FilenameMatcher("*.m", "*.mlx", "*.mlapp")
+            case self.OCAML:
+                return FilenameMatcher("*.ml", "*.mli")
             case _:
                 raise ValueError(f"Unhandled language: {self}")
 
@@ -412,6 +418,10 @@ class Language(str, Enum):
                 from solidlsp.language_servers.matlab_language_server import MatlabLanguageServer
 
                 return MatlabLanguageServer
+            case self.OCAML:
+                from solidlsp.language_servers.ocaml_language_server import OcamlLanguageServer
+
+                return OcamlLanguageServer
             case _:
                 raise ValueError(f"Unhandled language: {self}")
 
